@@ -1,4 +1,4 @@
-#This script copies the AMI to other region where source ami is tagged "CrossAccntRepli" and tag copied AMI 'DeleteOnCopy' with retention  days specified.
+#This script copies the AMI to other region where source ami is tagged "CrossAccntRepli" and tag copied AMI 'DeleteOn' with retention  days specified.
 import boto3
 import json
 from dateutil import parser
@@ -66,7 +66,7 @@ def copy_latest_image():
                                 dest_image_client.create_tags(
                                     Resources=to_tag[retention_days],
                                     Tags=[
-                                        {'Key': 'DeleteOnCopy', 'Value': delete_fmt},
+                                        {'Key': 'DeleteOn', 'Value': delete_fmt},
                                         ]
                                     )
             else:
