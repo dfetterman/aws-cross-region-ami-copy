@@ -1,4 +1,4 @@
-#This script copies the AMI to other region and tag copied AMI 'DeleteOnCopy' with retention  days specified.
+#This script copies the AMI to other region where source ami is tagged "CrossAccntRepli" and tag copied AMI 'DeleteOnCopy' with retention  days specified.
 import boto3
 import json
 from dateutil import parser
@@ -24,50 +24,53 @@ def copy_latest_image():
     to_tag = collections.defaultdict(list)
     
     for image in images:
-        image_date = parser.parse(image.creation_date)
+        if image.tags is not None: 
+            for t in image.tags:
+                if t['Key'] == 'CrossAccntRepli' and t.get('Value') is  not None:
         
-        #Copy todays images
-        if image_date.date() == (datetime.datetime.today()).date(): 
+                    #Copy todays images
+                    image_date = parser.parse(image.creation_date)
+                    if image_date.date() == (datetime.datetime.today()).date(): 
         
-	    #To Copy previous day images
-        #if image_date.date() == (datetime.datetime.today()-datetime.timedelta(1)).date(): 
+	                #To Copy previous day images
+                    #if image_date.date() == (datetime.datetime.today()-datetime.timedelta(1)).date(): 
 		            
-            if not dest_image_client.describe_images(Owners=['XXXXX',],Filters=[{'Name':'name','Values':[image.name]}])['Images']:
-            #if not dest_image_client.describe_images(Owners=['XXXXX',])['Images']:
+                        if not dest_image_client.describe_images(Owners=['XXXXX',],Filters=[{'Name':'name','Values':[image.name]}])['Images']:
+                        #if not dest_image_client.describe_images(Owners=['XXXXX',])['Images']:
             
-                print "Copying Image {name} - {id} to us-west-2".format(name=image.name,id=image.id)
-                new_ami = dest_image_client.copy_image(
-                    DryRun=False,
-                    SourceRegion=source_region,
-                    SourceImageId=image.id,
-                    Name=image.name,
-                    Description=image.description
-                )
+                            print "Copying Image {name} - {id} to us-west-2".format(name=image.name,id=image.id)
+                            new_ami = dest_image_client.copy_image(
+                                DryRun=False,
+                                SourceRegion=source_region,
+                                SourceImageId=image.id,
+                                Name=image.name,
+                                Description=image.description
+                            )
                 
-                to_tag[retention_days].append(new_ami['ImageId'])
+                            to_tag[retention_days].append(new_ami['ImageId'])
                 
-                print "New Image Id {new_id} for us-east-1 Image {name} - {id}".format(new_id=new_ami,name=image.name,id=image.id)
+                            print "New Image Id {new_id} for us-east-1 Image {name} - {id}".format(new_id=new_ami,name=image.name,id=image.id)
                 
                 
-                print "Retaining AMI %s for %d days" % (
-                        new_ami['ImageId'],
-                        retention_days,
-                    )
+                            print "Retaining AMI %s for %d days" % (
+                                    new_ami['ImageId'],
+                                    retention_days,
+                                )
                     
-                for ami_retention_days in to_tag.keys():
-                    delete_date = datetime.date.today() + datetime.timedelta(days=retention_days)
-                    delete_fmt = delete_date.strftime('%d-%m-%Y')
-                    print "Will delete %d AMIs on %s" % (len(to_tag[retention_days]), delete_fmt)
+                            for ami_retention_days in to_tag.keys():
+                                delete_date = datetime.date.today() + datetime.timedelta(days=retention_days)
+                                delete_fmt = delete_date.strftime('%m-%d-%Y')
+                                print "Will delete %d AMIs on %s" % (len(to_tag[retention_days]), delete_fmt)
                     
-                    #To create a tag to an AMI when it can be deleted after retention period expires
-                    dest_image_client.create_tags(
-                        Resources=to_tag[retention_days],
-                        Tags=[
-                            {'Key': 'DeleteOnCopy', 'Value': delete_fmt},
-                            ]
-                        )
+                                #To create a tag to an AMI when it can be deleted after retention period expires
+                                dest_image_client.create_tags(
+                                    Resources=to_tag[retention_days],
+                                    Tags=[
+                                        {'Key': 'DeleteOnCopy', 'Value': delete_fmt},
+                                        ]
+                                    )
             else:
-                print "Image {name} - {id} already present in xxx Region".format(name=image.name,id=image.id)
+                print "Image {name} - {id} already present in xxx Region or falls outside of date created scope".format(name=image.name,id=image.id)
 
 def lambda_handler(event, context):
     copy_latest_image()
