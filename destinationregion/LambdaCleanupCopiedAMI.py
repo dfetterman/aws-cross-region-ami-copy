@@ -16,8 +16,8 @@ def lambda_handler(event, context):
     to_tag = collections.defaultdict(list)
 
     date = datetime.datetime.now()
-    date_fmt = date.strftime('%d-%m-%Y')
-    print "Today's date and time:" + date.strftime('%d-%m-%Y:%H.%m.%s')
+    date_fmt = date.strftime('%m-%d-%Y')
+    print "Today's date and time:" + date.strftime('%m-%d-%Y:%H.%m.%s')
     
     imagesList = []
     # Loop through each image of our current instance
@@ -26,15 +26,15 @@ def lambda_handler(event, context):
             if image.tags is not None:
                 deletion_date = [
                     t.get('Value') for t in image.tags
-                    if t['Key'] == 'DeleteOnCopy'][0]
+                    if t['Key'] == 'DeleteOn'][0]
                 
-                delete_date = time.strptime(deletion_date, "%d-%m-%Y")
+                delete_date = time.strptime(deletion_date, "%m-%d-%Y")
                 #print ("deletion_date %s" %delete_date)
                 
                 #today = datetime.datetime.now()
-                #today_date = today.strftime('%d-%m-%Y')
-                today_time = datetime.datetime.now().strftime('%d-%m-%Y')
-                today_date = time.strptime(today_time, '%d-%m-%Y')
+                #today_date = today.strftime('%m-%d-%Y')
+                today_time = datetime.datetime.now().strftime('%m-%d-%Y')
+                today_date = time.strptime(today_time, '%m-%d-%Y')
                 # print ("today_date %s" %today_date)
                 
                 # If image's DeleteOn date is less than or equal to today,
