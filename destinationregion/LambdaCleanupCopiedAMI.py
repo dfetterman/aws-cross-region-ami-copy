@@ -1,4 +1,4 @@
-#This script deregister the AMI and deletes the associated snapshots for the AMI date of "DeleteOnCopy" expired.
+#This script deregister the AMI and deletes the associated snapshots for the AMI date of "DeleteOn" expired.
 
 import boto3
 import collections
